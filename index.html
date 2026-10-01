@@ -9,6 +9,10 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"
+          onload="if (typeof renderMathInElement === 'function') renderMathInElement(document.body, {delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}], throwOnError: false});"></script>
 </head>
 <body>
 
@@ -75,7 +79,7 @@
     </header>
 
     <section class="chapter" id="raid-parity">
-      <div class="ch-meta"><span class="ch-num">01</span><span class="ch-tag">Parity Invariants</span></div>
+      <div class="ch-meta"><span class="ch-num">01</span> <span class="ch-tag">Parity Invariants</span></div>
       <h3>Simple Parity, Hamming Distance &amp; RAID-5 / RAID-6 Dual Parity</h3>
       <p>The simplest erasure code is single parity: given $k$ data disks $D_1, D_2, \dots, D_k$, compute the parity block as the bitwise exclusive OR:</p>
       $$P = D_1 \oplus D_2 \oplus \dots \oplus D_k$$
@@ -88,7 +92,7 @@
     </section>
 
     <section class="chapter" id="galois-field">
-      <div class="ch-meta"><span class="ch-num">02</span><span class="ch-tag">Finite Fields</span></div>
+      <div class="ch-meta"><span class="ch-num">02</span> <span class="ch-tag">Finite Fields</span></div>
       <h3>Abstract Algebra for Systems Engineers: Galois Fields $GF(2^8)$</h3>
       <p>Standard computer integer arithmetic wraps or overflows beyond 8, 16, or 64 bits. In storage systems, we need arithmetic where operations over 8-bit bytes <strong>always produce another 8-bit byte</strong> without overflow or precision loss. This mathematical structure is a <strong>Galois Field $GF(2^8)$</strong>.</p>
       <p>In $GF(2^8)$:</p>
@@ -102,7 +106,7 @@
     </section>
 
     <section class="chapter" id="gf-tables">
-      <div class="ch-meta"><span class="ch-num">03</span><span class="ch-tag">Lookup Tables</span></div>
+      <div class="ch-meta"><span class="ch-num">03</span> <span class="ch-tag">Lookup Tables</span></div>
       <h3>Galois Field Log/Antilog Tables &amp; Bitmatrix Arithmetic</h3>
       <p>Computing polynomial division in software for every byte in a multi-gigabyte HDFS block would devastate CPU throughput. High-performance erasure coding libraries (James Plank's <em>Jerasure</em>, Intel ISA-L) use <strong>Logarithm and Antilog (Exponent) Lookup Tables</strong>.</p>
       <p>Every non-zero element in $GF(2^8)$ can be generated as a power of a primitive generator $\alpha = 2$. Multiplication simplifies to integer addition modulo 255:</p>
@@ -114,7 +118,7 @@
     </section>
 
     <section class="chapter" id="shannon-entropy">
-      <div class="ch-meta"><span class="ch-num">04</span><span class="ch-tag">Information Theory</span></div>
+      <div class="ch-meta"><span class="ch-num">04</span> <span class="ch-tag">Information Theory</span></div>
       <h3>Information Entropy &amp; Lossless Compression Lower Bounds</h3>
       <p>Claude Shannon's 1948 landmark paper established that information content is bounded by <strong>Shannon Entropy $H(X)$</strong>:</p>
       $$H(X) = -\sum_{i=1}^n p(x_i) \log_2 p(x_i)$$
@@ -134,7 +138,7 @@
     </header>
 
     <section class="chapter" id="rs-vandermonde">
-      <div class="ch-meta"><span class="ch-num">05</span><span class="ch-tag">Vandermonde Coding</span></div>
+      <div class="ch-meta"><span class="ch-num">05</span> <span class="ch-tag">Vandermonde Coding</span></div>
       <h3>Reed-Solomon Encoding: Vandermonde Distribution Matrix ($k \times m$)</h3>
       <p>In an $RS(k, m)$ code, $k$ data blocks are encoded into $k + m$ storage blocks. Any $m$ of the $k+m$ blocks can fail without losing a single byte of data. This is achieved via matrix multiplication:</p>
       $$\mathbf{C} = \mathbf{G} \cdot \mathbf{D}$$
@@ -145,7 +149,7 @@
     </section>
 
     <section class="chapter" id="cauchy-matrix">
-      <div class="ch-meta"><span class="ch-num">06</span><span class="ch-tag">Cauchy Bitmatrices</span></div>
+      <div class="ch-meta"><span class="ch-num">06</span> <span class="ch-tag">Cauchy Bitmatrices</span></div>
       <h3>Cauchy Reed-Solomon Matrices &amp; Eliminating Multiplications with XOR Bitmatrices</h3>
       <p>While Vandermonde matrices are conceptually elegant, inverting Vandermonde submatrices can occasionally encounter singular (non-invertible) configurations unless complex adjustments are made. Furthermore, field multiplications still consume precious CPU cycles.</p>
       <p><strong>Cauchy Reed-Solomon (Jerasure, James Plank)</strong> uses Cauchy matrices where every entry is defined as $a_{i,j} = \frac{1}{x_i \oplus y_j}$. Cauchy matrices are mathematically guaranteed to have every square submatrix non-singular. Furthermore, each field element is projected into an $8 \times 8$ binary bitmatrix, converting the entire Reed-Solomon encoding schedule into pure SIMD XOR operations (AVX-512 / ARM NEON)!</p>
@@ -155,7 +159,7 @@
     </section>
 
     <section class="chapter" id="matrix-inversion">
-      <div class="ch-meta"><span class="ch-num">07</span><span class="ch-tag">Erasure Decoding</span></div>
+      <div class="ch-meta"><span class="ch-num">07</span> <span class="ch-tag">Erasure Decoding</span></div>
       <h3>Erasure Decoding: Inverting the Surviving Submatrix ($A^{-1} \cdot D'$)</h3>
       <p>When up to $m$ storage nodes crash, how does the storage engine reconstruct the lost data? By solving a linear system of equations:</p>
       <ol>
@@ -169,7 +173,7 @@
     </section>
 
     <section class="chapter" id="systematic-coding">
-      <div class="ch-meta"><span class="ch-num">08</span><span class="ch-tag">Zero-Copy IO</span></div>
+      <div class="ch-meta"><span class="ch-num">08</span> <span class="ch-tag">Zero-Copy IO</span></div>
       <h3>Systematic vs. Non-Systematic Codes &amp; Direct Zero-Copy Data Passing</h3>
       <p>An erasure code is <strong>Systematic</strong> if the original input data appears verbatim and unencoded in the output codeword. If an erasure code were non-systematic, reading even a single uncorrupted file would require contacting $k$ nodes and running matrix inversion decoding on every read!</p>
       <p>By enforcing systematic coding ($\mathbf{G} = [\mathbf{I}_k \mid \mathbf{P}]^T$), distributed storage engines (HDFS, Ceph, MinIO) serve normal client read requests directly from disk via zero-copy Linux kernel syscalls (<code>sendfile()</code> and <code>splice()</code>). Decoding math is executed *only* during active node failures.</p>
@@ -188,7 +192,7 @@
     </header>
 
     <section class="chapter" id="hdfs-striping">
-      <div class="ch-meta"><span class="ch-num">09</span><span class="ch-tag">HDFS 3.0 EC</span></div>
+      <div class="ch-meta"><span class="ch-num">09</span> <span class="ch-tag">HDFS 3.0 EC</span></div>
       <h3>HDFS Erasure Coding: Striping Cell Size (1MB) vs. Block Level EC</h3>
       <p>In traditional Hadoop HDFS, files were divided into large 128MB contiguous blocks. If erasure coding were applied at the block level, a small 10MB file could not fill $k=6$ blocks, forcing either massive zero-padding waste or falling back to 3x replication.</p>
       <p>HDFS 3.0 introduced <strong>Striped Erasure Coding (RS-6-3-1024k)</strong>. Logical blocks are divided into <strong>1MB Cells</strong>. Cells are striped round-robin across 6 DataNodes plus 3 Parity nodes concurrently. This allows files of any size to leverage erasure coding while aggregating disk throughput across 6 independent DataNode network cards simultaneously!</p>
@@ -198,7 +202,7 @@
     </section>
 
     <section class="chapter" id="degraded-read">
-      <div class="ch-meta"><span class="ch-num">10</span><span class="ch-tag">Network Amplification</span></div>
+      <div class="ch-meta"><span class="ch-num">10</span> <span class="ch-tag">Network Amplification</span></div>
       <h3>The Degraded Read Problem &amp; Single-Disk Repair Network Penalty</h3>
       <p>While Reed-Solomon saves enormous disk space, it introduces a severe network penalty during background drive replacement: <strong>The Degraded Read Bottleneck</strong>.</p>
       <p>In standard $RS(k, m)$, reconstructing a *single* lost block requires downloading $k$ surviving blocks across the datacenter network! For $RS(6, 3)$, repairing one 128MB block generates $6 \times 128\text{MB} = 768\text{MB}$ of cross-rack network traffic (a $6\times$ network amplification penalty). Because over 95% of datacenter storage incidents are single drive failures, standard RS floods top-of-rack network switches during routine rebalancing.</p>
@@ -208,7 +212,7 @@
     </section>
 
     <section class="chapter" id="lrc-codes">
-      <div class="ch-meta"><span class="ch-num">11</span><span class="ch-tag">LRC Architecture</span></div>
+      <div class="ch-meta"><span class="ch-num">11</span> <span class="ch-tag">LRC Architecture</span></div>
       <h3>Locally Repairable Codes (LRC): Microsoft Azure &amp; HDFS</h3>
       <p>To eliminate the degraded read network bottleneck, Microsoft Research developed <strong>Locally Repairable Codes (LRC)</strong>, now adopted in Windows Azure Storage and Apache Hadoop HDFS.</p>
       <p>LRC divides the $k$ data blocks into smaller local groups (e.g. $k=12$ split into two groups of 6) and computes a <strong>Local Parity block</strong> for each group, alongside 2 Global Parity blocks. When a single drive fails, the storage engine reads *only the 6 blocks within the local group* plus the local parity, slashing network reconstruction traffic by <strong>50%</strong>!</p>
@@ -218,7 +222,7 @@
     </section>
 
     <section class="chapter" id="hitchhiker-codes">
-      <div class="ch-meta"><span class="ch-num">12</span><span class="ch-tag">Piggybacking Codes</span></div>
+      <div class="ch-meta"><span class="ch-num">12</span> <span class="ch-tag">Piggybacking Codes</span></div>
       <h3>Hitchhiker / Piggybacking Codes: Sub-Chunk I/O Savings in HDFS</h3>
       <p>Invented at UC Berkeley and CMU by K.V. Rashmi et al., <strong>Hitchhiker Codes</strong> reduce repair network traffic without adding extra parity storage overhead. Hitchhiker splits each block into two sub-chunks and "piggybacks" linear combinations of data from one sub-chunk onto the parity of the second sub-chunk.</p>
       <p>During single-node repair, surviving nodes transmit only *half-blocks* (one sub-chunk), reducing network traffic and disk read I/O by <strong>25% to 45%</strong> with zero sacrifice in fault tolerance!</p>
@@ -237,7 +241,7 @@
     </header>
 
     <section class="chapter" id="lz77-sliding">
-      <div class="ch-meta"><span class="ch-num">13</span><span class="ch-tag">Dictionary Compression</span></div>
+      <div class="ch-meta"><span class="ch-num">13</span> <span class="ch-tag">Dictionary Compression</span></div>
       <h3>LZ77 Sliding Window &amp; Token Streams (Snappy / LZ4 Foundation)</h3>
       <p>Modern high-speed compressors (Snappy, LZ4, Zstandard) are built on the foundational <strong>LZ77 (Lempel-Ziv 1977)</strong> dictionary algorithm. The compressor maintains a sliding window of recently seen bytes (typically 32KB to 64KB).</p>
       <p>As new data enters the lookahead buffer, the compressor searches the sliding window for the longest matching byte sequence. When a match is found, it emits a compact <code>(offset, length)</code> token instead of raw bytes. Decompression is lightning fast because expanding tokens requires only sequential in-memory <code>memcpy()</code> operations without complex tree traversals.</p>
@@ -247,7 +251,7 @@
     </section>
 
     <section class="chapter" id="huffman">
-      <div class="ch-meta"><span class="ch-num">14</span><span class="ch-tag">Entropy Coding</span></div>
+      <div class="ch-meta"><span class="ch-num">14</span> <span class="ch-tag">Entropy Coding</span></div>
       <h3>Huffman Coding: Prefix-Free Binary Trees &amp; Variable-Length Streams</h3>
       <p>While dictionary compressors eliminate repeated phrases, <strong>Huffman Coding</strong> eliminates symbol entropy redundancy. David Huffman's algorithm builds a binary tree from bottom to top, pairing least-frequent symbols first.</p>
       <p>The resulting binary tree is strictly <strong>Prefix-Free</strong>: no symbol's binary code is a prefix of another code. Frequent characters (like 'E' or '0') receive short 1- to 3-bit codes, while rare symbols receive longer codes. Standards like DEFLATE (gzip, zlib) pair LZ77 dictionary matches with Huffman entropy coding to achieve maximum density.</p>
@@ -257,7 +261,7 @@
     </section>
 
     <section class="chapter" id="crc32-hardware">
-      <div class="ch-meta"><span class="ch-num">15</span><span class="ch-tag">Hardware Integrity</span></div>
+      <div class="ch-meta"><span class="ch-num">15</span> <span class="ch-tag">Hardware Integrity</span></div>
       <h3>Hardware-Accelerated Data Integrity: CRC32-C (Castagnoli)</h3>
       <p>In distributed storage systems managing petabytes of data, <strong>Silent Data Corruption (Bit Rot)</strong> is an unavoidable physical reality. Drives experience silent media decay without throwing hardware I/O errors.</p>
       <p>Storage engines verify block integrity using <strong>CRC32-C (Castagnoli Polynomial: <code>0x1EDC6F41</code>)</strong>. Castagnoli provides superior Hamming distance properties compared to standard IEEE CRC32. Modern CPUs (Intel SSE4.2 <code>crc32q</code> and ARMv8 CRC extensions) provide dedicated hardware instructions, allowing a single CPU core to verify data integrity at over <strong>30 GB/second</strong>!</p>
