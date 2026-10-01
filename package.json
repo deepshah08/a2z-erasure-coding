@@ -1,0 +1,21 @@
+{
+  "name": "a2z-erasure-coding",
+  "version": "1.0.0",
+  "description": "Erasure Coding & Storage Math, Bit by Bit — An Explorable Architecture Guide to Galois Fields, Reed-Solomon Matrices, HDFS Erasure Coding, LRC, and Data Compression",
+  "main": "index.html",
+  "scripts": {
+    "test": "node tests/audit-all-widgets.js"
+  },
+  "keywords": [
+    "erasure-coding",
+    "reed-solomon",
+    "galois-field",
+    "hdfs-ec",
+    "locally-repairable-codes",
+    "storage-math",
+    "compression",
+    "explorable-explanation"
+  ],
+  "author": "Deep Shah",
+  "license": "MIT"
+}

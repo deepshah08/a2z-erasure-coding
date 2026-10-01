@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Erasure Coding &amp; Storage Math, Bit by Bit — An Explorable Architectural Guide</title>
+  <meta name="description" content="An interactive, visual field guide to storage mathematics, erasure coding, and data compression: from Galois Fields and Reed-Solomon matrices to HDFS 3.0 striped cells, Locally Repairable Codes (LRC), and LZ77.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<header class="site-head">
+  <div class="brand">
+    <span class="badge">CURRICULUM</span>
+    <span class="title">Erasure Coding, Bit by Bit</span>
+  </div>
+  <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle theme">◐ Theme</button>
+</header>
+
+<section class="hero">
+  <div class="hero-text">
+    <p class="eyebrow">Interactive Systems Field Guide</p>
+    <h1>Erasure Coding &amp; Storage Math, Bit by Bit</h1>
+    <p class="lede">Synthesizing Thomas Cover (<em>Elements of Information Theory</em>), San Ling (<em>Coding Theory</em>), James Plank (<em>Jerasure</em>), and Apache Hadoop HDFS-7285 into an explorable visual guide. From Galois Field arithmetic and Reed-Solomon Vandermonde matrices to HDFS 3.0 1MB striped cell layout, Locally Repairable Codes (LRC), degraded read network penalties, and hardware-accelerated CRC32-C verification.</p>
+    <p class="hero-hint">↓ Scroll through the curriculum or test the live HDFS Storage Economics Arena below.</p>
+  </div>
+  <figure class="viz viz-hero" data-viz="ecHero">
+    <figcaption>Figure 00 — HDFS Erasure Coding vs 3x Replication Arena: Compare raw cluster storage footprints, physical disk savings, and multi-node failure recovery between RS(6,3), RS(10,4), and legacy 3x Replication.</figcaption>
+  </figure>
+</section>
+
+<div class="layout">
+  <nav class="toc" aria-label="Table of contents">
+    <details class="toc-details" open>
+      <summary>Curriculum Index</summary>
+      <ol class="toc-list">
+        <li class="toc-part">Part I · Parity, RAID &amp; Galois Fields</li>
+        <li><a href="#raid-parity"><span class="toc-num">01</span><span>RAID-5 XOR Parity Invariants</span></a></li>
+        <li><a href="#galois-field"><span class="toc-num">02</span><span>Galois Field GF(2^8) Math</span></a></li>
+        <li><a href="#gf-tables"><span class="toc-num">03</span><span>GF Log/Antilog Lookup Tables</span></a></li>
+        <li><a href="#shannon-entropy"><span class="toc-num">04</span><span>Shannon Information Entropy</span></a></li>
+
+        <li class="toc-part">Part II · Reed-Solomon Codes &amp; Matrices</li>
+        <li><a href="#rs-vandermonde"><span class="toc-num">05</span><span>RS Vandermonde Distribution</span></a></li>
+        <li><a href="#cauchy-matrix"><span class="toc-num">06</span><span>Cauchy Matrices &amp; Bitmatrices</span></a></li>
+        <li><a href="#matrix-inversion"><span class="toc-num">07</span><span>Erasure Decoding Inversion</span></a></li>
+        <li><a href="#systematic-coding"><span class="toc-num">08</span><span>Systematic Zero-Copy Codes</span></a></li>
+
+        <li class="toc-part">Part III · Distributed Storage Codes (HDFS)</li>
+        <li><a href="#hdfs-striping"><span class="toc-num">09</span><span>HDFS 3.0 1MB Striped Cells</span></a></li>
+        <li><a href="#degraded-read"><span class="toc-num">10</span><span>The Degraded Read Problem</span></a></li>
+        <li><a href="#lrc-codes"><span class="toc-num">11</span><span>Locally Repairable Codes (LRC)</span></a></li>
+        <li><a href="#hitchhiker-codes"><span class="toc-num">12</span><span>Hitchhiker Sub-Chunk Codes</span></a></li>
+
+        <li class="toc-part">Part IV · Compression &amp; Data Integrity</li>
+        <li><a href="#lz77-sliding"><span class="toc-num">13</span><span>LZ77 Sliding Window (Snappy)</span></a></li>
+        <li><a href="#huffman"><span class="toc-num">14</span><span>Huffman Prefix-Free Trees</span></a></li>
+        <li><a href="#crc32-hardware"><span class="toc-num">15</span><span>Hardware CRC32-C Verification</span></a></li>
+      </ol>
+    </details>
+  </nav>
+
+  <main class="content">
+
+    <!-- ====================================================================
+         PART I: PARITY, RAID & GALOIS FIELDS
+         ==================================================================== -->
+    <header class="part-header">
+      <span class="part-eyebrow">Part I</span>
+      <h2>Parity, RAID &amp; Galois Fields</h2>
+      <p class="part-desc">The mathematical foundations of fault tolerance: bitwise XOR parity, finite field Galois arithmetic, fast lookup tables, and Shannon entropy lower bounds.</p>
+    </header>
+
+    <section class="chapter" id="raid-parity">
+      <div class="ch-meta"><span class="ch-num">01</span><span class="ch-tag">Parity Invariants</span></div>
+      <h3>Simple Parity, Hamming Distance &amp; RAID-5 / RAID-6 Dual Parity</h3>
+      <p>The simplest erasure code is single parity: given $k$ data disks $D_1, D_2, \dots, D_k$, compute the parity block as the bitwise exclusive OR:</p>
+      $$P = D_1 \oplus D_2 \oplus \dots \oplus D_k$$
+      <p>Because XOR is its own inverse ($A \oplus A = 0$), losing any single disk $D_i$ can be solved by XORing the surviving data blocks with $P$:</p>
+      $$D_i = P \oplus \bigoplus_{j \ne i} D_j$$
+      <p>However, RAID-5 cannot survive two concurrent drive failures. RAID-6 introduces a second parity drive $Q$, calculated using Galois Field multiplication to guarantee that any two arbitrary disk failures remain uniquely solvable.</p>
+      <figure class="viz" data-viz="raidParityMatrix">
+        <figcaption>Figure 01 — RAID-5 Parity Invariant &amp; Bitwise Reconstruction: Crash any disk in the array, observe XOR bit parity properties, and restore original data.</figcaption>
+      </figure>
+    </section>
+
+    <section class="chapter" id="galois-field">
+      <div class="ch-meta"><span class="ch-num">02</span><span class="ch-tag">Finite Fields</span></div>
+      <h3>Abstract Algebra for Systems Engineers: Galois Fields $GF(2^8)$</h3>
+      <p>Standard computer integer arithmetic wraps or overflows beyond 8, 16, or 64 bits. In storage systems, we need arithmetic where operations over 8-bit bytes <strong>always produce another 8-bit byte</strong> without overflow or precision loss. This mathematical structure is a <strong>Galois Field $GF(2^8)$</strong>.</p>
+      <p>In $GF(2^8)$:</p>
+      <ul>
+        <li><strong>Addition &amp; Subtraction:</strong> Are identical and equal to bitwise XOR ($A + B = A \oplus B$). No carries!</li>
+        <li><strong>Multiplication:</strong> Bytes are treated as polynomials with coefficients in $\{0, 1\}$. Polynomials are multiplied and reduced modulo an irreducible Primitive Polynomial: $P(x) = x^8 + x^4 + x^3 + x^2 + 1$ (hexadecimal <code>0x11D</code>).</li>
+      </ul>
+      <figure class="viz" data-viz="galoisFieldMul">
+        <figcaption>Figure 02 — Galois Field GF(2^8) Multiplier: Multiply 8-bit operands in GF(2^8), trace modular reduction by irreducible polynomial 0x11D, and verify zero-overflow arithmetic.</figcaption>
+      </figure>
+    </section>
+
+    <section class="chapter" id="gf-tables">
+      <div class="ch-meta"><span class="ch-num">03</span><span class="ch-tag">Lookup Tables</span></div>
+      <h3>Galois Field Log/Antilog Tables &amp; Bitmatrix Arithmetic</h3>
+      <p>Computing polynomial division in software for every byte in a multi-gigabyte HDFS block would devastate CPU throughput. High-performance erasure coding libraries (James Plank's <em>Jerasure</em>, Intel ISA-L) use <strong>Logarithm and Antilog (Exponent) Lookup Tables</strong>.</p>
+      <p>Every non-zero element in $GF(2^8)$ can be generated as a power of a primitive generator $\alpha = 2$. Multiplication simplifies to integer addition modulo 255:</p>
+      $$A \otimes B = \text{antilog}\big((\text{log}[A] + \text{log}[B]) \pmod{255}\big)$$
+      <p>By keeping two 256-byte lookup tables resident in L1 CPU cache, Galois multiplication executes in $O(1)$ time with just three memory reads!</p>
+      <figure class="viz" data-viz="gfLookupTables">
+        <figcaption>Figure 03 — GF Log/Antilog Lookup Pipeline: Transform polynomial field multiplication into single-cycle table lookups with zero division instructions.</figcaption>
+      </figure>
+    </section>
+
+    <section class="chapter" id="shannon-entropy">
+      <div class="ch-meta"><span class="ch-num">04</span><span class="ch-tag">Information Theory</span></div>
+      <h3>Information Entropy &amp; Lossless Compression Lower Bounds</h3>
+      <p>Claude Shannon's 1948 landmark paper established that information content is bounded by <strong>Shannon Entropy $H(X)$</strong>:</p>
+      $$H(X) = -\sum_{i=1}^n p(x_i) \log_2 p(x_i)$$
+      <p>Shannon's Source Coding Theorem mathematically proves that no lossless compression algorithm (gzip, snappy, zstd, lz4) can compress data below $H(X)$ bits per symbol on average. Data with uniform probability distributions (such as encrypted blocks or pre-compressed video) has $H(X) \approx 8.0\text{ bits/byte}$ and is mathematically incompressible.</p>
+      <figure class="viz" data-viz="shannonEntropy">
+        <figcaption>Figure 04 — Shannon Information Entropy Analyzer: Measure symbol frequency skew across structured text vs random ciphertext and compute theoretical compression limits.</figcaption>
+      </figure>
+    </section>
+
+    <!-- ====================================================================
+         PART II: REED-SOLOMON CODES & MATRICES
+         ==================================================================== -->
+    <header class="part-header">
+      <span class="part-eyebrow">Part II</span>
+      <h2>Reed-Solomon Codes &amp; Matrices</h2>
+      <p class="part-desc">The industry standard for distributed storage fault tolerance: Vandermonde distribution matrices, Cauchy bitmatrices, and Gaussian elimination decoding.</p>
+    </header>
+
+    <section class="chapter" id="rs-vandermonde">
+      <div class="ch-meta"><span class="ch-num">05</span><span class="ch-tag">Vandermonde Coding</span></div>
+      <h3>Reed-Solomon Encoding: Vandermonde Distribution Matrix ($k \times m$)</h3>
+      <p>In an $RS(k, m)$ code, $k$ data blocks are encoded into $k + m$ storage blocks. Any $m$ of the $k+m$ blocks can fail without losing a single byte of data. This is achieved via matrix multiplication:</p>
+      $$\mathbf{C} = \mathbf{G} \cdot \mathbf{D}$$
+      <p>The Generator Matrix $\mathbf{G}$ has dimensions $(k+m) \times k$. The top $k \times k$ submatrix is the <strong>Identity Matrix $\mathbf{I}_k$</strong> (ensuring the original $k$ data blocks remain untouched), while the bottom $m \times k$ submatrix is a <strong>Vandermonde Matrix</strong> whose entries are powers of field generators $g_{i,j} = j^{i-1}$ over $GF(2^8)$.</p>
+      <figure class="viz" data-viz="reedSolomonVandermonde">
+        <figcaption>Figure 05 — Reed-Solomon Vandermonde Encoder: Multiply input data vectors by the distribution matrix to generate independent parity blocks.</figcaption>
+      </figure>
+    </section>
+
+    <section class="chapter" id="cauchy-matrix">
+      <div class="ch-meta"><span class="ch-num">06</span><span class="ch-tag">Cauchy Bitmatrices</span></div>
+      <h3>Cauchy Reed-Solomon Matrices &amp; Eliminating Multiplications with XOR Bitmatrices</h3>
+      <p>While Vandermonde matrices are conceptually elegant, inverting Vandermonde submatrices can occasionally encounter singular (non-invertible) configurations unless complex adjustments are made. Furthermore, field multiplications still consume precious CPU cycles.</p>
+      <p><strong>Cauchy Reed-Solomon (Jerasure, James Plank)</strong> uses Cauchy matrices where every entry is defined as $a_{i,j} = \frac{1}{x_i \oplus y_j}$. Cauchy matrices are mathematically guaranteed to have every square submatrix non-singular. Furthermore, each field element is projected into an $8 \times 8$ binary bitmatrix, converting the entire Reed-Solomon encoding schedule into pure SIMD XOR operations (AVX-512 / ARM NEON)!</p>
+      <figure class="viz" data-viz="cauchyBitmatrix">
+        <figcaption>Figure 06 — Cauchy 8x8 Binary Bitmatrix: Project Galois field coefficients into binary XOR schedules to achieve multi-gigabyte-per-second encoding speeds.</figcaption>
+      </figure>
+    </section>
+
+    <section class="chapter" id="matrix-inversion">
+      <div class="ch-meta"><span class="ch-num">07</span><span class="ch-tag">Erasure Decoding</span></div>
+      <h3>Erasure Decoding: Inverting the Surviving Submatrix ($A^{-1} \cdot D'$)</h3>
+      <p>When up to $m$ storage nodes crash, how does the storage engine reconstruct the lost data? By solving a linear system of equations:</p>
+      <ol>
+        <li>Identify any $k$ surviving nodes and select their corresponding rows from generator matrix $\mathbf{G}$ to form a $k \times k$ matrix $\mathbf{A}$.</li>
+        <li>Invert matrix $\mathbf{A}$ over $GF(2^8)$ using <strong>Gaussian Elimination</strong> to obtain $\mathbf{A}^{-1}$.</li>
+        <li>Multiply $\mathbf{A}^{-1}$ by the surviving data vector $\mathbf{D}'$ to reconstruct the original data vector $\mathbf{D} = \mathbf{A}^{-1} \cdot \mathbf{D}'$!</li>
+      </ol>
+      <figure class="viz" data-viz="matrixInversionDecode">
+        <figcaption>Figure 07 — Linear Submatrix Inverter: Crash arbitrary data nodes, form square surviving submatrix A, compute A⁻¹ via Gaussian elimination, and recover lost blocks.</figcaption>
+      </figure>
+    </section>
+
+    <section class="chapter" id="systematic-coding">
+      <div class="ch-meta"><span class="ch-num">08</span><span class="ch-tag">Zero-Copy IO</span></div>
+      <h3>Systematic vs. Non-Systematic Codes &amp; Direct Zero-Copy Data Passing</h3>
+      <p>An erasure code is <strong>Systematic</strong> if the original input data appears verbatim and unencoded in the output codeword. If an erasure code were non-systematic, reading even a single uncorrupted file would require contacting $k$ nodes and running matrix inversion decoding on every read!</p>
+      <p>By enforcing systematic coding ($\mathbf{G} = [\mathbf{I}_k \mid \mathbf{P}]^T$), distributed storage engines (HDFS, Ceph, MinIO) serve normal client read requests directly from disk via zero-copy Linux kernel syscalls (<code>sendfile()</code> and <code>splice()</code>). Decoding math is executed *only* during active node failures.</p>
+      <figure class="viz" data-viz="systematicCoding">
+        <figcaption>Figure 08 — Systematic vs Non-Systematic Read Paths: Verify zero-copy DMA performance during healthy cluster operation vs degraded failure modes.</figcaption>
+      </figure>
+    </section>
+
+    <!-- ====================================================================
+         PART III: DISTRIBUTED STORAGE CODES (HDFS)
+         ==================================================================== -->
+    <header class="part-header">
+      <span class="part-eyebrow">Part III</span>
+      <h2>Distributed Storage Codes (HDFS)</h2>
+      <p class="part-desc">Production storage architectures in Hadoop HDFS 3.0: 1MB striped cell layouts, the degraded read network bottleneck, and Locally Repairable Codes (LRC).</p>
+    </header>
+
+    <section class="chapter" id="hdfs-striping">
+      <div class="ch-meta"><span class="ch-num">09</span><span class="ch-tag">HDFS 3.0 EC</span></div>
+      <h3>HDFS Erasure Coding: Striping Cell Size (1MB) vs. Block Level EC</h3>
+      <p>In traditional Hadoop HDFS, files were divided into large 128MB contiguous blocks. If erasure coding were applied at the block level, a small 10MB file could not fill $k=6$ blocks, forcing either massive zero-padding waste or falling back to 3x replication.</p>
+      <p>HDFS 3.0 introduced <strong>Striped Erasure Coding (RS-6-3-1024k)</strong>. Logical blocks are divided into <strong>1MB Cells</strong>. Cells are striped round-robin across 6 DataNodes plus 3 Parity nodes concurrently. This allows files of any size to leverage erasure coding while aggregating disk throughput across 6 independent DataNode network cards simultaneously!</p>
+      <figure class="viz" data-viz="hdfsStriping">
+        <figcaption>Figure 09 — HDFS 3.0 Striped Cell Architecture: Trace round-robin 1MB cell distribution across DataNodes and observe parallel multi-node write pipelines.</figcaption>
+      </figure>
+    </section>
+
+    <section class="chapter" id="degraded-read">
+      <div class="ch-meta"><span class="ch-num">10</span><span class="ch-tag">Network Amplification</span></div>
+      <h3>The Degraded Read Problem &amp; Single-Disk Repair Network Penalty</h3>
+      <p>While Reed-Solomon saves enormous disk space, it introduces a severe network penalty during background drive replacement: <strong>The Degraded Read Bottleneck</strong>.</p>
+      <p>In standard $RS(k, m)$, reconstructing a *single* lost block requires downloading $k$ surviving blocks across the datacenter network! For $RS(6, 3)$, repairing one 128MB block generates $6 \times 128\text{MB} = 768\text{MB}$ of cross-rack network traffic (a $6\times$ network amplification penalty). Because over 95% of datacenter storage incidents are single drive failures, standard RS floods top-of-rack network switches during routine rebalancing.</p>
+      <figure class="viz" data-viz="degradedReadPenalty">
+        <figcaption>Figure 10 — Degraded Read Network Amplification: Contrast 1x network transfer during 3x replication repair against 6x network amplification in RS(6,3).</figcaption>
+      </figure>
+    </section>
+
+    <section class="chapter" id="lrc-codes">
+      <div class="ch-meta"><span class="ch-num">11</span><span class="ch-tag">LRC Architecture</span></div>
+      <h3>Locally Repairable Codes (LRC): Microsoft Azure &amp; HDFS</h3>
+      <p>To eliminate the degraded read network bottleneck, Microsoft Research developed <strong>Locally Repairable Codes (LRC)</strong>, now adopted in Windows Azure Storage and Apache Hadoop HDFS.</p>
+      <p>LRC divides the $k$ data blocks into smaller local groups (e.g. $k=12$ split into two groups of 6) and computes a <strong>Local Parity block</strong> for each group, alongside 2 Global Parity blocks. When a single drive fails, the storage engine reads *only the 6 blocks within the local group* plus the local parity, slashing network reconstruction traffic by <strong>50%</strong>!</p>
+      <figure class="viz" data-viz="locallyRepairableCodes">
+        <figcaption>Figure 11 — Locally Repairable Codes (LRC) Topology: Trace Local Parity groups (6 Data + 1 Parity) and demonstrate 50% network bandwidth savings during single-node repair.</figcaption>
+      </figure>
+    </section>
+
+    <section class="chapter" id="hitchhiker-codes">
+      <div class="ch-meta"><span class="ch-num">12</span><span class="ch-tag">Piggybacking Codes</span></div>
+      <h3>Hitchhiker / Piggybacking Codes: Sub-Chunk I/O Savings in HDFS</h3>
+      <p>Invented at UC Berkeley and CMU by K.V. Rashmi et al., <strong>Hitchhiker Codes</strong> reduce repair network traffic without adding extra parity storage overhead. Hitchhiker splits each block into two sub-chunks and "piggybacks" linear combinations of data from one sub-chunk onto the parity of the second sub-chunk.</p>
+      <p>During single-node repair, surviving nodes transmit only *half-blocks* (one sub-chunk), reducing network traffic and disk read I/O by <strong>25% to 45%</strong> with zero sacrifice in fault tolerance!</p>
+      <figure class="viz" data-viz="hitchhikerCodes">
+        <figcaption>Figure 12 — Hitchhiker Piggybacked Codes: Examine sub-chunk linear combinations and trace reduced data transfer volumes during background node reconstruction.</figcaption>
+      </figure>
+    </section>
+
+    <!-- ====================================================================
+         PART IV: COMPRESSION & DATA INTEGRITY
+         ==================================================================== -->
+    <header class="part-header">
+      <span class="part-eyebrow">Part IV</span>
+      <h2>Compression &amp; Data Integrity</h2>
+      <p class="part-desc">How storage engines shrink bytes and guarantee bit-level fidelity: LZ77 sliding dictionaries, Huffman prefix coding, and SIMD hardware CRC32-C.</p>
+    </header>
+
+    <section class="chapter" id="lz77-sliding">
+      <div class="ch-meta"><span class="ch-num">13</span><span class="ch-tag">Dictionary Compression</span></div>
+      <h3>LZ77 Sliding Window &amp; Token Streams (Snappy / LZ4 Foundation)</h3>
+      <p>Modern high-speed compressors (Snappy, LZ4, Zstandard) are built on the foundational <strong>LZ77 (Lempel-Ziv 1977)</strong> dictionary algorithm. The compressor maintains a sliding window of recently seen bytes (typically 32KB to 64KB).</p>
+      <p>As new data enters the lookahead buffer, the compressor searches the sliding window for the longest matching byte sequence. When a match is found, it emits a compact <code>(offset, length)</code> token instead of raw bytes. Decompression is lightning fast because expanding tokens requires only sequential in-memory <code>memcpy()</code> operations without complex tree traversals.</p>
+      <figure class="viz" data-viz="lz77SlidingWindow">
+        <figcaption>Figure 13 — LZ77 Sliding Window Engine: Trace search history buffers, observe match token emissions (offset, length), and inspect Snappy/LZ4 compression strides.</figcaption>
+      </figure>
+    </section>
+
+    <section class="chapter" id="huffman">
+      <div class="ch-meta"><span class="ch-num">14</span><span class="ch-tag">Entropy Coding</span></div>
+      <h3>Huffman Coding: Prefix-Free Binary Trees &amp; Variable-Length Streams</h3>
+      <p>While dictionary compressors eliminate repeated phrases, <strong>Huffman Coding</strong> eliminates symbol entropy redundancy. David Huffman's algorithm builds a binary tree from bottom to top, pairing least-frequent symbols first.</p>
+      <p>The resulting binary tree is strictly <strong>Prefix-Free</strong>: no symbol's binary code is a prefix of another code. Frequent characters (like 'E' or '0') receive short 1- to 3-bit codes, while rare symbols receive longer codes. Standards like DEFLATE (gzip, zlib) pair LZ77 dictionary matches with Huffman entropy coding to achieve maximum density.</p>
+      <figure class="viz" data-viz="huffmanEncoding">
+        <figcaption>Figure 14 — Huffman Prefix-Free Binary Tree: Inspect symbol frequency weighting, trace variable-length bit assignments, and verify unambiguous bitstream decoding.</figcaption>
+      </figure>
+    </section>
+
+    <section class="chapter" id="crc32-hardware">
+      <div class="ch-meta"><span class="ch-num">15</span><span class="ch-tag">Hardware Integrity</span></div>
+      <h3>Hardware-Accelerated Data Integrity: CRC32-C (Castagnoli)</h3>
+      <p>In distributed storage systems managing petabytes of data, <strong>Silent Data Corruption (Bit Rot)</strong> is an unavoidable physical reality. Drives experience silent media decay without throwing hardware I/O errors.</p>
+      <p>Storage engines verify block integrity using <strong>CRC32-C (Castagnoli Polynomial: <code>0x1EDC6F41</code>)</strong>. Castagnoli provides superior Hamming distance properties compared to standard IEEE CRC32. Modern CPUs (Intel SSE4.2 <code>crc32q</code> and ARMv8 CRC extensions) provide dedicated hardware instructions, allowing a single CPU core to verify data integrity at over <strong>30 GB/second</strong>!</p>
+      <figure class="viz" data-viz="crc32Hardware">
+        <figcaption>Figure 15 — Hardware CRC32-C Verification Engine: Inject silent bit-rot flips into storage sectors, trace hardware Castagnoli verification, and detect corrupted blocks.</figcaption>
+      </figure>
+    </section>
+
+  </main>
+</div>
+
+<footer class="site-foot">
+  <p><strong>Erasure Coding &amp; Storage Math, Bit by Bit</strong> — An open-source interactive architectural guide.</p>
+  <p>Curricular sources: Thomas Cover (<em>Elements of Information Theory</em>), San Ling (<em>Coding Theory</em>), James Plank (<em>Jerasure</em>), Apache Hadoop HDFS-7285 Architecture Guide.</p>
+</footer>
+
+<script src="assets/core.js"></script>
+<script src="assets/viz-galois-parity.js"></script>
+<script src="assets/viz-reed-solomon.js"></script>
+<script src="assets/viz-hdfs-repair-compression.js"></script>
+<script>
+  window.addEventListener('DOMContentLoaded', () => {
+    if (window.OS && window.OS.boot) {
+      window.OS.boot();
+    }
+  });
+</script>
+</body>
+</html>
