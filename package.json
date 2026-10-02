@@ -4,7 +4,9 @@
   "description": "Erasure Coding & Storage Math, Bit by Bit — An Explorable Architecture Guide to Galois Fields, Reed-Solomon Matrices, HDFS Erasure Coding, LRC, and Data Compression",
   "main": "index.html",
   "scripts": {
-    "test": "node tests/audit-all-widgets.js"
+    "test": "node tests/audit-all-widgets.js && python3 tests/e2e-browser-audit.py",
+    "test:unit": "node tests/audit-all-widgets.js",
+    "test:e2e": "python3 tests/e2e-browser-audit.py"
   },
   "keywords": [
     "erasure-coding",
